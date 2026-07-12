@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lega-convidados-v12-ipad-manual';
+const CACHE_NAME = 'lega-convidados-v13-ordem-navegacao';
 const ARQUIVOS = [
   './',
   './index.html',
