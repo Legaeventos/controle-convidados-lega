@@ -165,12 +165,17 @@ function updateSummary(){const gs=current.guests,p=gs.filter(g=>g.entered).lengt
 let pendingImport=null;
 
 function cleanHeader(s){
-  return normalize(s).replace(/[():]/g,' ').replace(/\s+/g,' ').trim();
+  return normalize(String(s||'')
+    .replace(/[\u200B-\u200D\u2060\uFEFF]/g,' ')
+    .replace(/\u00A0/g,' ')
+    .replace(/^[^\p{L}\p{N}]+/gu,' ')
+  ).replace(/[():;,.!?()[\]{}\-–—_]/g,' ').replace(/\s+/g,' ').trim();
 }
 function detectSection(line){
   const h=cleanHeader(line);
   if(!h)return null;
-  if(/^lista de convidados?$/.test(h))return {skip:true};
+  if(/^(lista|relacao|relação)\s+(de\s+)?convidados?$/.test(h))return {skip:true};
+  if(/^convidados?$/.test(h))return {skip:true};
   if(/aniversariant/.test(h))return {type:'isento',birthday:true};
   if(/^(bebes?|isentos?|criancas?\s+(de\s+)?0\s+a\s+4(\s+anos?)?|criancas?\s+menores?\s+de\s+4|menores?\s+de\s+4)/.test(h))return {type:'isento'};
   if(/^(criancas?|infantil)/.test(h)){
@@ -192,6 +197,8 @@ function parseSmartList(text){
     // Remove numeração inicial: 1. Nome, 1) Nome, 1 - Nome
     line=line.replace(/^\s*\d+\s*[\.\)\-–—:]\s*/,'').trim();
     if(!line)continue;
+    const headerCheck=cleanHeader(line);
+    if(/^(lista|relacao|relação)\s+(de\s+)?convidados?$/.test(headerCheck)||/^convidados?$/.test(headerCheck))continue;
 
     let observation='';
     const parens=[...line.matchAll(/\(([^)]+)\)/g)].map(m=>m[1].trim());

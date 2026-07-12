@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lega-convidados-v10-aniversariante-preview';
+const CACHE_NAME = 'lega-convidados-v11-titulo-lista';
 const ARQUIVOS = [
   './',
   './index.html',
