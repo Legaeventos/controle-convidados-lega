@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lega-convidados-v8-importador-inteligente';
+const CACHE_NAME = 'lega-convidados-v9-preview-editavel';
 const ARQUIVOS = [
   './',
   './index.html',
