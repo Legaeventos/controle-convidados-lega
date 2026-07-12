@@ -97,7 +97,7 @@ body.reception-mode #receptionEventSummary{display:block}
       <span>Aplicar a todos:</span>
       <button type="button" data-all-type="adulto">Adulto</button>
       <button type="button" data-all-type="crianca">Criança</button>
-      <button type="button" data-all-type="isento">Isento</button>
+      <button type="button" data-all-type="isento">Isento</button><button type="button" data-all-type="aniversariante">Aniversariante</button>
     </div>
     <div class="preview-table-wrap">
       <table class="preview-table">
@@ -232,7 +232,7 @@ function parseSmartList(text){
   }
   return result;
 }
-function typeLabel(t){return t==='adulto'?'Adulto':t==='crianca'?'Criança':t==='isento'?'Isento':'Não identificado'}
+function typeLabel(t,birthday=false){if(birthday)return'Aniversariante';return t==='adulto'?'Adulto':t==='crianca'?'Criança':t==='isento'?'Isento':'Não identificado'}
 function renderImportPreview(){
   if(!pendingImport)return;
   const gs=pendingImport.guests;
@@ -241,6 +241,7 @@ function renderImportPreview(){
     adulto:gs.filter(g=>g.type==='adulto').length,
     crianca:gs.filter(g=>g.type==='crianca').length,
     isento:gs.filter(g=>g.type==='isento').length,
+    birthday:gs.filter(g=>g.birthday).length,
     unknown:gs.filter(g=>!g.type).length,
     obs:gs.filter(g=>g.observation).length
   };
@@ -248,7 +249,7 @@ function renderImportPreview(){
     `<span class="preview-stat">Total: ${counts.total}</span>`+
     `<span class="preview-stat">Adultos: ${counts.adulto}</span>`+
     `<span class="preview-stat">Crianças: ${counts.crianca}</span>`+
-    `<span class="preview-stat">Isentos: ${counts.isento}</span>`+
+    `<span class="preview-stat">Isentos: ${counts.isento}</span>`+`<span class="preview-stat">Aniversariantes: ${counts.birthday}</span>`+
     `<span class="preview-stat ${counts.unknown?'warn':''}">Não identificados: ${counts.unknown}</span>`+
     `<span class="preview-stat">Observações: ${counts.obs}</span>`;
   $('unidentifiedTools').style.display=counts.unknown?'flex':'none';
@@ -258,7 +259,7 @@ function renderImportPreview(){
       <option value="" ${!g.type?'selected':''}>Não identificado</option>
       <option value="adulto" ${g.type==='adulto'?'selected':''}>Adulto</option>
       <option value="crianca" ${g.type==='crianca'?'selected':''}>Criança</option>
-      <option value="isento" ${g.type==='isento'?'selected':''}>Isento</option>
+      <option value="isento" ${g.type==='isento'&&!g.birthday?'selected':''}>Isento</option><option value="aniversariante" ${g.birthday?'selected':''}>Aniversariante</option>
     </select></td>
     <td><input class="preview-input" data-preview-observation="${i}" value="${escapeHtml(g.observation||'')}" placeholder="Opcional"></td>
   </tr>`).join('');
@@ -311,7 +312,10 @@ $('previewRows').onchange=e=>{
   const nameIndex=e.target.dataset.previewName;
   const obsIndex=e.target.dataset.previewObservation;
   if(typeIndex!==undefined){
-    pendingImport.guests[Number(typeIndex)].type=e.target.value||null;
+    const guest=pendingImport.guests[Number(typeIndex)];
+    const value=e.target.value||null;
+    guest.birthday=value==='aniversariante';
+    guest.type=value==='aniversariante'?'isento':value;
     renderImportPreview();
   }else if(nameIndex!==undefined){
     pendingImport.guests[Number(nameIndex)].name=e.target.value.trim().toUpperCase();
@@ -328,7 +332,12 @@ $('previewRows').oninput=e=>{
 };
 $('unidentifiedTools').onclick=e=>{
   const t=e.target.dataset.allType;if(!t||!pendingImport)return;
-  pendingImport.guests.forEach(g=>{if(!g.type)g.type=t});
+  pendingImport.guests.forEach(g=>{
+    if(!g.type){
+      g.birthday=t==='aniversariante';
+      g.type=t==='aniversariante'?'isento':t;
+    }
+  });
   renderImportPreview();
 };
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});loadSaved();
