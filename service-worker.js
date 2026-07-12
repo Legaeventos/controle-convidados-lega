@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lega-convidados-v6-correcao-botoes';
+const CACHE_NAME = 'lega-convidados-v7-cabecalho-recepcao';
 const ARQUIVOS = [
   './',
   './index.html',
