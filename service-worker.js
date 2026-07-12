@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lega-convidados-v11-titulo-lista';
+const CACHE_NAME = 'lega-convidados-v12-ipad-manual';
 const ARQUIVOS = [
   './',
   './index.html',

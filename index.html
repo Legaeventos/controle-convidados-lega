@@ -164,18 +164,34 @@ function updateSummary(){const gs=current.guests,p=gs.filter(g=>g.entered).lengt
 
 let pendingImport=null;
 
+
+function removeInvisibleCharacters(s){
+  return String(s||'')
+    .replace(/[\u200B-\u200F\u202A-\u202E\u2060\u2066-\u2069\uFEFF]/g,'')
+    .replace(/\u00A0/g,' ');
+}
 function cleanHeader(s){
-  return normalize(String(s||'')
-    .replace(/[\u200B-\u200D\u2060\uFEFF]/g,' ')
-    .replace(/\u00A0/g,' ')
-    .replace(/^[^\p{L}\p{N}]+/gu,' ')
-  ).replace(/[():;,.!?()[\]{}\-–—_]/g,' ').replace(/\s+/g,' ').trim();
+  return normalize(removeInvisibleCharacters(s))
+    .replace(/[^\p{L}\p{N}]+/gu,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+function isListTitle(line){
+  const h=cleanHeader(line);
+  if(!h)return false;
+  const compact=h.replace(/\s+/g,'');
+  return (
+    (h.includes('lista') && /convidad/.test(h)) ||
+    (h.includes('relacao') && /convidad/.test(h)) ||
+    (h.includes('relação') && /convidad/.test(h)) ||
+    compact==='convidados' ||
+    compact==='convidado'
+  );
 }
 function detectSection(line){
   const h=cleanHeader(line);
   if(!h)return null;
-  if(/^(lista|relacao|relação)\s+(de\s+)?convidados?$/.test(h))return {skip:true};
-  if(/^convidados?$/.test(h))return {skip:true};
+  if(isListTitle(line))return {skip:true};
   if(/aniversariant/.test(h))return {type:'isento',birthday:true};
   if(/^(bebes?|isentos?|criancas?\s+(de\s+)?0\s+a\s+4(\s+anos?)?|criancas?\s+menores?\s+de\s+4|menores?\s+de\s+4)/.test(h))return {type:'isento'};
   if(/^(criancas?|infantil)/.test(h)){
@@ -187,18 +203,29 @@ function detectSection(line){
 }
 function parseSmartList(text){
   const result=[]; let section=null;
-  const lines=text.split(/\r?\n/);
+
+  // Aceita quebras comuns do Windows, iPad, WhatsApp e separadores Unicode.
+  const lines=removeInvisibleCharacters(text).split(/\r\n|\n|\r|\u2028|\u2029/);
+
   for(let rawLine of lines){
-    let line=rawLine.trim();
+    let line=removeInvisibleCharacters(rawLine).trim();
     if(!line)continue;
+
+    // Título puro da relação nunca vira convidado.
+    if(isListTitle(line))continue;
+
     const sec=detectSection(line);
     if(sec){if(!sec.skip)section=sec;continue}
 
-    // Remove numeração inicial: 1. Nome, 1) Nome, 1 - Nome
-    line=line.replace(/^\s*\d+\s*[\.\)\-–—:]\s*/,'').trim();
+    // Remove numeração ou marcador inicial:
+    // 1. Nome | 1) Nome | 1 - Nome | 31: Nome | • Nome
+    line=line
+      .replace(/^\s*[•●▪◦‣⁃]+\s*/,'')
+      .replace(/^\s*\d+\s*[\.\)\-–—:]\s*/,'')
+      .trim();
+
     if(!line)continue;
-    const headerCheck=cleanHeader(line);
-    if(/^(lista|relacao|relação)\s+(de\s+)?convidados?$/.test(headerCheck)||/^convidados?$/.test(headerCheck))continue;
+    if(isListTitle(line))continue;
 
     let observation='';
     const parens=[...line.matchAll(/\(([^)]+)\)/g)].map(m=>m[1].trim());
@@ -219,6 +246,7 @@ function parseSmartList(text){
       .trim();
 
     if(!name)continue;
+    if(isListTitle(name))continue;
 
     let type=null;
     if(birthday||explicitFree||(age!==null&&age<4))type='isento';
@@ -228,13 +256,13 @@ function parseSmartList(text){
     result.push({
       id:Date.now()+result.length+Math.floor(Math.random()*10000),
       name:name.toUpperCase(),
-      type:type,
-      age:age,
+      type,
+      age,
       birthday:!!birthday,
       entered:false,
       time:'',
       outsideList:false,
-      observation:observation
+      observation
     });
   }
   return result;
