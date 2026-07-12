@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lega-convidados-v1';
+const CACHE_NAME = 'lega-convidados-v2';
 const ARQUIVOS = [
   './',
   './index.html',
