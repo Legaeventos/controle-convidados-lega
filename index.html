@@ -112,7 +112,7 @@ body.reception-mode #receptionEventSummary{display:block}
   </div>
 </div>
 <script>
-const KEY='lega_eventos_salvos_v2';let savedEvents=[];let current=null;let filter='all';let dirty=false;let storageOK=true;let appMode='edit';const $=id=>document.getElementById(id);const clone=o=>JSON.parse(JSON.stringify(o));
+const KEY='lega_eventos_salvos_v2';let savedEvents=[];let current=null;let filter='all';let dirty=false;let storageOK=true;let appMode='edit';let editorReturn='home';const $=id=>document.getElementById(id);const clone=o=>JSON.parse(JSON.stringify(o));
 function uuid(){return 'ev_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8)}
 function blankEvent(){return{id:uuid(),updatedAt:new Date().toISOString(),event:{name:'',date:'',birthday:'',owner:'',notes:''},guests:[]}}
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');if(id==='saved')renderSaved();window.scrollTo(0,0)}
@@ -139,10 +139,20 @@ appMode=mode;
 document.body.classList.toggle('reception-mode',mode==='reception');
 document.body.classList.toggle('edit-mode',mode==='edit');
 }
-function openEditor(ev,mode='edit'){setMode(mode);current=clone(ev);fillFields();dirty=false;updateDirty();renderGuests();show('editor')}
-function openReception(ev){openEditor(ev,'reception')}
-function openEdit(ev){openEditor(ev,'edit')}
-function newEvent(){openEditor(blankEvent(),'edit')}
+function openEditor(ev,mode='edit',returnTo='saved'){
+editorReturn=returnTo;
+$('backEditor').textContent=returnTo==='home'?'← Início':'← Eventos salvos';
+setMode(mode);
+current=clone(ev);
+fillFields();
+dirty=false;
+updateDirty();
+renderGuests();
+show('editor')
+}
+function openReception(ev){openEditor(ev,'reception','saved')}
+function openEdit(ev){openEditor(ev,'edit','saved')}
+function newEvent(){openEditor(blankEvent(),'edit','home')}
 function markDirty(){dirty=true;updateDirty()}
 function updateDirty(){$('dirty').textContent=dirty?'● Alterações não salvas':'✓ Salvo';$('dirty').classList.toggle('dirty',dirty)}
 function updateSubtitle(){const n=$('eventName').value.trim();$('subtitle').textContent='Lega Eventos · '+(n||'novo evento')}
@@ -159,7 +169,7 @@ function normalize(s){return String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').t
 function typeText(g){if(g.birthday)return'Aniversariante';if(g.type==='adulto')return'Adulto';if(g.type==='crianca')return'Criança pagante';return'Isento'}
 function ageText(a){if(a===null||a===''||Number.isNaN(Number(a)))return'';return Number(a)===1?'1 ano':`${Number(a)} anos`}
 function passFilter(g){if(filter==='all')return true;if(filter==='waiting')return!g.entered;if(filter==='present')return g.entered;if(filter==='aniv')return g.birthday;return g.type===filter}
-function renderGuests(){if(!current)return;const term=normalize($('search').value.trim());const list=current.guests.filter(g=>passFilter(g)&&normalize(g.name).includes(term));const box=$('guestList');box.innerHTML='';if(!list.length)box.innerHTML='<div class="empty">Nenhum convidado encontrado.</div>';else list.forEach(g=>{const el=document.createElement('article');el.className='guest '+(g.entered?'entered':'');el.innerHTML=`<div><div class="guest-name">${g.birthday?'🎂 ':''}${escapeHtml(g.name)}</div><div class="badges"><span class="badge ${g.birthday?'aniv':g.type==='isento'?'isento':''}">${typeText(g)}</span>${g.age!==null&&g.age!==''?`<span class="badge">${ageText(g.age)}</span>`:''}${g.entered&&g.time?`<span class="badge">Entrada: ${escapeHtml(g.time)}</span>`:''}${g.observation?`<span class="badge">${escapeHtml(g.observation)}</span>`:''}</div></div><div class="guest-buttons"><button class="entry" data-entry="${g.id}">${g.entered?'✓ Entrou · desfazer':'Marcar entrada'}</button><button class="delete" title="Excluir convidado" data-del="${g.id}">×</button></div>`;box.appendChild(el)});updateSummary();$('shown').textContent=`${list.length} convidado${list.length===1?'':'s'} exibido${list.length===1?'':'s'}`}
+function renderGuests(){if(!current)return;const term=normalize($('search').value.trim());const list=orderGuestsForDisplay(current.guests.filter(g=>passFilter(g)&&normalize(g.name).includes(term)));const box=$('guestList');box.innerHTML='';if(!list.length)box.innerHTML='<div class="empty">Nenhum convidado encontrado.</div>';else list.forEach(g=>{const el=document.createElement('article');el.className='guest '+(g.entered?'entered':'');el.innerHTML=`<div><div class="guest-name">${g.birthday?'🎂 ':''}${escapeHtml(g.name)}</div><div class="badges"><span class="badge ${g.birthday?'aniv':g.type==='isento'?'isento':''}">${typeText(g)}</span>${g.age!==null&&g.age!==''?`<span class="badge">${ageText(g.age)}</span>`:''}${g.entered&&g.time?`<span class="badge">Entrada: ${escapeHtml(g.time)}</span>`:''}${g.observation?`<span class="badge">${escapeHtml(g.observation)}</span>`:''}</div></div><div class="guest-buttons"><button class="entry" data-entry="${g.id}">${g.entered?'✓ Entrou · desfazer':'Marcar entrada'}</button><button class="delete" title="Excluir convidado" data-del="${g.id}">×</button></div>`;box.appendChild(el)});updateSummary();$('shown').textContent=`${list.length} convidado${list.length===1?'':'s'} exibido${list.length===1?'':'s'}`}
 function updateSummary(){const gs=current.guests,p=gs.filter(g=>g.entered).length;$('sumTotal').textContent=gs.length;$('sumPresent').textContent=p;$('sumMissing').textContent=gs.length-p;$('sumAdults').textContent=gs.filter(g=>g.type==='adulto').length;$('sumChildren').textContent=gs.filter(g=>g.type==='crianca').length;$('sumFree').textContent=gs.filter(g=>g.type==='isento').length;$('sumExtra').textContent=gs.filter(g=>g.outsideList).length}
 
 let pendingImport=null;
@@ -265,7 +275,7 @@ function parseSmartList(text){
       observation
     });
   }
-  return organizeImportedGuests(result);
+  return result;
 }
 
 function extractParentNames(text){
@@ -281,20 +291,18 @@ function extractParentNames(text){
   return found;
 }
 
-function organizeImportedGuests(guests){
-  if(!guests.length)return guests;
 
-  // Mantém a identificação original: ninguém vira aniversariante automaticamente.
-  const birthday=guests.find(g=>g.birthday);
-  if(!birthday)return guests;
+function orderGuestsForDisplay(guests){
+  const original=guests.slice();
+  const birthday=original.find(g=>g.birthday);
+  if(!birthday)return original;
 
   const refs=extractParentNames(birthday.observation||'');
   const used=new Set([birthday.id]);
   const ordered=[birthday];
 
-  // Pai e mãe indicados junto ao aniversariante aparecem logo abaixo dele.
   for(const ref of refs){
-    const match=guests.find(g=>!used.has(g.id)&&(
+    const match=original.find(g=>!used.has(g.id)&&(
       normalize(g.name)===normalize(ref.name) ||
       normalize(g.name).includes(normalize(ref.name)) ||
       normalize(ref.name).includes(normalize(g.name))
@@ -305,8 +313,7 @@ function organizeImportedGuests(guests){
     }
   }
 
-  // Todos os demais permanecem na ordem original.
-  for(const g of guests){
+  for(const g of original){
     if(!used.has(g.id)){
       used.add(g.id);
       ordered.push(g);
@@ -350,7 +357,7 @@ function renderImportPreview(){
   $('importPreviewModal').setAttribute('aria-hidden','false');
 }
 function analyzeImport(text,replace){
-  const guests=organizeImportedGuests(parseSmartList(text));
+  const guests=parseSmartList(text);
   if(!guests.length){alert('Nenhum nome foi reconhecido.');return}
   pendingImport={guests,replace};
   renderImportPreview();
@@ -378,7 +385,7 @@ function confirmSmartImport(){
 }
 function importText(text,replace){analyzeImport(text,replace)}
 ['eventName','eventDate','eventBirthday','eventOwner','eventNotes'].forEach(id=>$(id).addEventListener('input',()=>{markDirty();updateSubtitle()}));
-$('goNew').onclick=newEvent;$('goSaved').onclick=()=>show('saved');document.querySelectorAll('[data-home]').forEach(b=>b.onclick=()=>show('home'));$('newFromSaved').onclick=newEvent;$('backEditor').onclick=()=>{if(dirty&&!confirm('Há alterações não salvas. Voltar mesmo assim?'))return;show('saved')};$('saveDevice').onclick=()=>saveToDevice();$('exportEvent').onclick=exportCurrent;$('clearEvent').onclick=()=>{if(confirm('Limpar todos os dados deste evento?'))newEvent()};
+$('goNew').onclick=newEvent;$('goSaved').onclick=()=>show('saved');document.querySelectorAll('[data-home]').forEach(b=>b.onclick=()=>show('home'));$('newFromSaved').onclick=newEvent;$('backEditor').onclick=()=>{if(dirty&&!confirm('Há alterações não salvas. Voltar mesmo assim?'))return;show(editorReturn)};$('saveDevice').onclick=()=>saveToDevice();$('exportEvent').onclick=exportCurrent;$('clearEvent').onclick=()=>{if(confirm('Limpar todos os dados deste evento?'))newEvent()};
 $('importEventBtn').onclick=()=>$('importEventFile').click();$('importEventFile').onchange=e=>{if(e.target.files[0])importFile(e.target.files[0],true);e.target.value=''};$('openEventEditor').onclick=()=>$('openEventFile').click();$('openEventFile').onchange=e=>{if(e.target.files[0])importFile(e.target.files[0],false);e.target.value=''};
 $('savedList').onclick=e=>{const id=e.target.dataset.open||e.target.dataset.edit||e.target.dataset.share||e.target.dataset.export||e.target.dataset.delete;if(!id)return;const ev=savedEvents.find(x=>x.id===id);if(!ev)return;if(e.target.dataset.open)openReception(ev);else if(e.target.dataset.edit)openEdit(ev);else if(e.target.dataset.share)shareEvent(ev);else if(e.target.dataset.export)download(filename(ev),JSON.stringify(ev,null,2),'application/json;charset=utf-8');else if(e.target.dataset.delete&&confirm(`Excluir o evento “${ev.event.name||'sem nome'}” deste aparelho?`)){savedEvents=savedEvents.filter(x=>x.id!==id);persistSaved();renderSaved()}};
 $('search').oninput=renderGuests;$('filters').onclick=e=>{const b=e.target.closest('.filter');if(!b)return;filter=b.dataset.f;document.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderGuests()};$('guestList').onclick=e=>{const ei=e.target.dataset.entry,di=e.target.dataset.del;if(ei){const g=current.guests.find(x=>x.id==ei);g.entered=!g.entered;g.time=g.entered?new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';markDirty();renderGuests()}if(di){const g=current.guests.find(x=>x.id==di);if(g&&confirm(`Excluir ${g.name} da lista?`)){current.guests=current.guests.filter(x=>x.id!=di);markDirty();renderGuests()}}};
