@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lega-convidados-v13-ordem-navegacao';
+const CACHE_NAME = 'lega-convidados-v14-ordem-aniversariante-corrigida';
 const ARQUIVOS = [
   './',
   './index.html',

@@ -280,16 +280,19 @@ function extractParentNames(text){
   }
   return found;
 }
+
 function organizeImportedGuests(guests){
   if(!guests.length)return guests;
-  const birthday=guests[0];
-  birthday.birthday=true;
-  birthday.type='isento';
+
+  // Mantém a identificação original: ninguém vira aniversariante automaticamente.
+  const birthday=guests.find(g=>g.birthday);
+  if(!birthday)return guests;
 
   const refs=extractParentNames(birthday.observation||'');
   const used=new Set([birthday.id]);
   const ordered=[birthday];
 
+  // Pai e mãe indicados junto ao aniversariante aparecem logo abaixo dele.
   for(const ref of refs){
     const match=guests.find(g=>!used.has(g.id)&&(
       normalize(g.name)===normalize(ref.name) ||
@@ -297,14 +300,12 @@ function organizeImportedGuests(guests){
       normalize(ref.name).includes(normalize(g.name))
     ));
     if(match){
-      match.type='adulto';
-      match.birthday=false;
-      match.relation=ref.role;
       used.add(match.id);
       ordered.push(match);
     }
   }
 
+  // Todos os demais permanecem na ordem original.
   for(const g of guests){
     if(!used.has(g.id)){
       used.add(g.id);
