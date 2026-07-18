@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lega-convidados-evento-20260718-v3-xlsx';
+const CACHE_NAME = 'lega-convidados-evento-20260718-v4-sem-cache-corrompido';
 const APP_SHELL = [
   './',
   './index.html',
@@ -10,7 +10,9 @@ const APP_SHELL = [
 ];
 
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL))
+  );
   self.skipWaiting();
 });
 
@@ -26,34 +28,45 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
 
-  const url = new URL(event.request.url);
-  const isNavigation = event.request.mode === 'navigate';
-
-  if (isNavigation) {
+  // Navegações: nunca guardar resposta de imagem/arquivo com a chave do index.
+  // Usa a internet primeiro e somente recorre ao index já validado quando offline.
+  if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request)
-        .then(response => {
-          if (response && response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put('./index.html', copy));
-          }
-          return response;
+      fetch(event.request, { cache: 'no-store' })
+        .then(response => response)
+        .catch(async () => {
+          const cache = await caches.open(CACHE_NAME);
+          return (await cache.match('./index.html')) || Response.error();
         })
-        .catch(() => caches.match('./index.html'))
     );
     return;
   }
 
+  const url = new URL(event.request.url);
+  const sameOrigin = url.origin === self.location.origin;
+
+  // Arquivos locais do aplicativo: cache primeiro, atualização em segundo plano.
+  if (sameOrigin) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then(async cache => {
+        const cached = await cache.match(event.request);
+        const networkPromise = fetch(event.request).then(response => {
+          if (response && response.ok) cache.put(event.request, response.clone());
+          return response;
+        }).catch(() => null);
+        return cached || (await networkPromise) || Response.error();
+      })
+    );
+    return;
+  }
+
+  // Bibliotecas e Firebase externos: rede primeiro; cache apenas pela URL original.
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      const network = fetch(event.request).then(response => {
-        if (response && (response.ok || response.type === 'opaque')) {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
-        }
-        return response;
-      });
-      return cached || network;
+    fetch(event.request).then(response => {
+      if (response && response.ok) {
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, response.clone()));
+      }
+      return response;
     }).catch(() => caches.match(event.request))
   );
 });

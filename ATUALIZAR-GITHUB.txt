@@ -1,23 +1,17 @@
-CONTROLE DE CONVIDADOS LEGA — VERSÃO ESTÁVEL PARA O EVENTO
+CORREÇÃO URGENTE — EVENTO
 
-1. No repositório controle-convidados-lega, envie estes arquivos para a RAIZ.
-2. Substitua os arquivos com os mesmos nomes.
-3. Não envie a pasta por fora e não use nomes com (2), (4), (7) etc.
-4. Os arquivos essenciais são:
-   index.html
-   firebase-config.js
-   manifest.json
-   service-worker.js
-   logo-lega.png
-   icon-192.png
-   icon-512.png
-5. Aguarde o GitHub Pages concluir a publicação.
-6. Abra o site e pressione Ctrl+F5 no computador.
-7. No iPad, feche totalmente o aplicativo e abra novamente. Se ainda mostrar a versão antiga, abra o endereço no Safari uma vez e depois reabra o app instalado.
+1. Extraia este ZIP.
+2. No GitHub, envie TODOS os arquivos extraídos por cima dos atuais.
+3. Commit: "Corrige cache corrompido e leitura do Excel"
+4. Aguarde o GitHub Pages concluir.
+5. No computador:
+   - feche o aplicativo instalado;
+   - abra o endereço no navegador;
+   - pressione Ctrl+Shift+Delete e limpe apenas "imagens e arquivos em cache";
+   - depois pressione Ctrl+F5.
+6. Se o aplicativo instalado ainda mostrar códigos PNG/IHDR:
+   - desinstale SOMENTE o atalho/app Controle de Convidados;
+   - abra o endereço atualizado no Chrome/Edge;
+   - instale novamente.
 
-Antes do evento:
-- Faça login.
-- Abra a lista correta.
-- Marque uma entrada de teste e desfaça.
-- Atualize a página e confirme que a alteração permaneceu.
-- Use “Salvar arquivo do evento” para guardar uma cópia de segurança.
+A lista salva no Firebase não é apagada ao reinstalar o aplicativo.

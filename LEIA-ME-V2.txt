@@ -1,37 +1,23 @@
-# Controle de Convidados — Lega Eventos
+CONTROLE DE CONVIDADOS LEGA — VERSÃO 2.0 FIREBASE
 
-Este pacote contém a versão instalável (PWA) do Controle de Convidados da Lega.
+PUBLICAÇÃO PELO SITE DO GITHUB
+1. Abra o repositório do sistema no GitHub.
+2. Clique em Add file > Upload files.
+3. Arraste TODOS os arquivos desta pasta, sem arrastar a pasta em si.
+4. Marque a opção para substituir os arquivos com o mesmo nome.
+5. Escreva: Atualização Firebase V2.
+6. Clique em Commit changes.
+7. Aguarde de 1 a 3 minutos e abra o site.
+8. Caso apareça a versão antiga, atualize com Ctrl+F5. No iPad, feche o app e abra novamente.
 
-## Publicar gratuitamente no GitHub Pages
+RECURSOS
+- Login por e-mail e senha do Firebase Authentication.
+- Eventos armazenados no Firestore e sincronizados entre dispositivos.
+- Cache local e funcionamento offline.
+- Salvamento automático.
+- Busca por nome, observação, responsável e variações fonéticas.
+- Ao tocar no resultado da busca, ela é limpa e o convidado é localizado na lista completa.
+- Importação e exportação JSON mantidas.
 
-1. Entre no GitHub e crie um repositório novo, por exemplo: `controle-convidados-lega`.
-2. Marque o repositório como **Public**.
-3. Dentro do repositório, clique em **Add file > Upload files**.
-4. Envie todos os arquivos desta pasta, sem enviar a pasta por fora:
-   - `index.html`
-   - `manifest.json`
-   - `service-worker.js`
-   - `icon-192.png`
-   - `icon-512.png`
-   - `logo-lega.png`
-5. Clique em **Commit changes**.
-6. Vá em **Settings > Pages**.
-7. Em **Build and deployment**, escolha **Deploy from a branch**.
-8. Selecione a branch **main**, pasta **/(root)** e clique em **Save**.
-9. Aguarde alguns minutos. O GitHub mostrará o endereço do programa.
-
-## Instalar no computador
-
-Abra o endereço no Microsoft Edge ou Google Chrome. Use o botão de instalação que aparece na barra de endereços ou no menu do navegador.
-
-## Instalar no iPad
-
-Abra o endereço no Safari. Toque em **Compartilhar** e depois em **Adicionar à Tela de Início**.
-
-## Uso offline
-
-Abra o programa pelo menos uma vez com internet depois da publicação. Após o primeiro carregamento, ele poderá abrir offline. Os eventos continuam podendo ser exportados e importados como arquivos para transferência entre computador e iPad.
-
-## Atualizações futuras
-
-Substitua os arquivos no mesmo repositório. Ao abrir o programa com internet, os aparelhos receberão a nova versão.
+IMPORTANTE
+As regras do Firestore devem permitir acesso autenticado à coleção eventos.
