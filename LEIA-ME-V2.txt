@@ -1,0 +1,23 @@
+CONTROLE DE CONVIDADOS LEGA — VERSÃO 2.0 FIREBASE
+
+PUBLICAÇÃO PELO SITE DO GITHUB
+1. Abra o repositório do sistema no GitHub.
+2. Clique em Add file > Upload files.
+3. Arraste TODOS os arquivos desta pasta, sem arrastar a pasta em si.
+4. Marque a opção para substituir os arquivos com o mesmo nome.
+5. Escreva: Atualização Firebase V2.
+6. Clique em Commit changes.
+7. Aguarde de 1 a 3 minutos e abra o site.
+8. Caso apareça a versão antiga, atualize com Ctrl+F5. No iPad, feche o app e abra novamente.
+
+RECURSOS
+- Login por e-mail e senha do Firebase Authentication.
+- Eventos armazenados no Firestore e sincronizados entre dispositivos.
+- Cache local e funcionamento offline.
+- Salvamento automático.
+- Busca por nome, observação, responsável e variações fonéticas.
+- Ao tocar no resultado da busca, ela é limpa e o convidado é localizado na lista completa.
+- Importação e exportação JSON mantidas.
+
+IMPORTANTE
+As regras do Firestore devem permitir acesso autenticado à coleção eventos.
