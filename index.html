@@ -271,69 +271,137 @@ function detectSection(line){
   if(/^(adultos?|maes?|pais|responsaveis?)/.test(h))return {type:'adulto'};
   return null;
 }
-function parseSmartList(text){
-  const result=[]; let section=null;
+function isImportMetadata(line){
+  const raw=normalize(removeInvisibleCharacters(line)).replace(/\s+/g,' ').trim();
+  const h=cleanHeader(line);
+  if(!h)return true;
+  if(/^das?\s+\d{1,2}(?:[:.h]\d{2})?\s*(?:as|a)\s*\d{1,2}(?:[:.h]\d{2})?\s*(?:h|hs|horas?)?\.?$/.test(raw))return true;
+  if(/^(data|horario|local|tema|evento|festa)\b/.test(h))return true;
+  if(/^\d{1,2}[\/.-]\d{1,2}(?:[\/.-]\d{2,4})?$/.test(raw))return true;
+  // Linha do cabeçalho com os aniversariantes e suas idades, não convidado.
+  if((raw.match(/\b\d{1,2}\s*anos?\b/g)||[]).length>=2 && /[-–—]/.test(raw))return true;
+  return false;
+}
+function splitSpreadsheetRow(line){
+  const cleaned=removeInvisibleCharacters(line).trim();
+  if(!cleaned)return [];
 
-  // Aceita quebras comuns do Windows, iPad, WhatsApp e separadores Unicode.
+  // Ao copiar do Excel/Numbers, as colunas normalmente chegam por TAB.
+  let cells=cleaned.split(/\t+/).map(x=>x.trim()).filter(Boolean);
+
+  // Algumas planilhas chegam pelo navegador usando o desenho da caixa de seleção.
+  if(cells.length<2 && /[☐☑☒□■]/.test(cleaned)){
+    cells=cleaned.split(/[☐☑☒□■]+/).map(x=>x.trim()).filter(Boolean);
+  }
+
+  // Remove células que contêm somente número/checkbox.
+  cells=cells.filter(x=>!/^\d+$/.test(x) && !/^[xX✓✔]+$/.test(x));
+  return cells.length?cells:[cleaned];
+}
+function parseGuestCell(raw, forcedType=null, section=null){
+  let line=removeInvisibleCharacters(raw).trim();
+  if(!line || isListTitle(line) || isImportMetadata(line))return null;
+
+  // Remove a numeração da linha mesmo quando não existe ponto após o número.
+  line=line
+    .replace(/^\s*[•●▪◦‣⁃]+\s*/,'')
+    .replace(/^\s*\d+\s*[\.\)\-–—:]?\s+/,'')
+    .replace(/[☐☑☒□■]+/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+  if(!line || isImportMetadata(line))return null;
+
+  let observation='';
+  const parens=[...line.matchAll(/\(([^)]+)\)/g)].map(m=>m[1].trim());
+  if(parens.length)observation=parens.join('; ');
+
+  // Separa vínculos/observações do nome sem perder a informação.
+  const relationMatch=line.match(/^(.+?)\s+(m[aã]e|pai|v[oó]v[oó]?|v[oô]v[oô]?|bisa|bisav[oó]|bisav[oô]|dinda|dindo|madrinha|padrinho|filha?|nora|genro|esposa?|marido|companheir[oa])\s+(?:d[oa]|de)\s+(.+)$/i);
+  if(relationMatch){
+    line=relationMatch[1].trim();
+    observation=`${relationMatch[2]} de ${relationMatch[3]}`;
+  }
+
+  let birthday=/\baniversariante\b/i.test(line)||(section&&section.birthday);
+  let explicitFree=/\bisent[oa]\b/i.test(line);
+  let age=null;
+  const am=line.match(/\b(\d{1,2})\s*a\s*n\s*o?s?\b/i);
+  if(am)age=Number(am[1]);
+
+  let name=line
+    .replace(/\([^)]*\)/g,' ')
+    .replace(/\b(aniversariante|isento|isenta)\b/gi,' ')
+    .replace(/\s*[-–—:]?\s*\b\d{1,2}\s*a\s*n\s*o?s?\b.*$/i,' ')
+    .replace(/[+*]+/g,' ')
+    .replace(/\s+/g,' ')
+    .replace(/[.,;:\-–—]+$/,'')
+    .trim();
+
+  if(!name || isListTitle(name) || isImportMetadata(name))return null;
+  if(!/[A-Za-zÀ-ÖØ-öø-ÿ]/.test(name))return null;
+
+  let type=forcedType;
+  if(birthday||explicitFree||(age!==null&&age<4))type='isento';
+  else if(age!==null)type='crianca';
+  else if(!type&&section&&section.type)type=section.type;
+
+  return {
+    id:Date.now()+Math.floor(Math.random()*100000),
+    name:name.toUpperCase(),
+    type,
+    age,
+    birthday:!!birthday,
+    entered:false,
+    time:'',
+    outsideList:false,
+    observation,
+    originalText:raw
+  };
+}
+function parseSmartList(text){
+  const result=[];
+  let section=null;
+  let pairedColumns=false;
   const lines=removeInvisibleCharacters(text).split(/\r\n|\n|\r|\u2028|\u2029/);
 
   for(let rawLine of lines){
-    let line=removeInvisibleCharacters(rawLine).trim();
+    const line=removeInvisibleCharacters(rawLine).trim();
     if(!line)continue;
 
-    // Título puro da relação nunca vira convidado.
-    if(isListTitle(line))continue;
+    const header=cleanHeader(line);
+    if(/adultos?/.test(header)&&/criancas?/.test(header)){
+      pairedColumns=true;
+      continue;
+    }
+    if(isListTitle(line)||isImportMetadata(line))continue;
 
     const sec=detectSection(line);
-    if(sec){if(!sec.skip)section=sec;continue}
+    if(sec){
+      if(!sec.skip)section=sec;
+      // Cabeçalho simples encerra o modo de duas colunas.
+      if(sec.type)pairedColumns=false;
+      continue;
+    }
 
-    // Remove numeração ou marcador inicial:
-    // 1. Nome | 1) Nome | 1 - Nome | 31: Nome | • Nome
-    line=line
-      .replace(/^\s*[•●▪◦‣⁃]+\s*/,'')
-      .replace(/^\s*\d+\s*[\.\)\-–—:]\s*/,'')
-      .trim();
+    const cells=splitSpreadsheetRow(line);
 
-    if(!line)continue;
-    if(isListTitle(line))continue;
+    // Formato Lega: uma linha possui um adulto à esquerda e uma criança à direita.
+    if(cells.length>=2){
+      pairedColumns=true;
+      const adult=parseGuestCell(cells[0],'adulto',null);
+      const child=parseGuestCell(cells[1],'crianca',null);
+      if(adult)result.push(adult);
+      if(child)result.push(child);
+      // Se houver mais colunas, alterna adulto/criança para não juntar nomes.
+      for(let i=2;i<cells.length;i++){
+        const guest=parseGuestCell(cells[i],i%2===0?'adulto':'crianca',null);
+        if(guest)result.push(guest);
+      }
+      continue;
+    }
 
-    let observation='';
-    const parens=[...line.matchAll(/\(([^)]+)\)/g)].map(m=>m[1].trim());
-    if(parens.length)observation=parens.join('; ');
-
-    let birthday=/aniversariante/i.test(line)||(section&&section.birthday);
-    let explicitFree=/\bisent[oa]\b/i.test(line);
-    let age=null;
-    const am=line.match(/(\d{1,2})\s*a\s*n\s*o?s?/i);
-    if(am)age=Number(am[1]);
-
-    let name=line
-      .replace(/\([^)]*\)/g,' ')
-      .replace(/\b(aniversariante|isento|isenta)\b/gi,' ')
-      .replace(/\s*[-–—:]\s*\d{1,2}\s*a\s*n\s*o?s?.*$/i,' ')
-      .replace(/[+*]+/g,' ')
-      .replace(/\s+/g,' ')
-      .trim();
-
-    if(!name)continue;
-    if(isListTitle(name))continue;
-
-    let type=null;
-    if(birthday||explicitFree||(age!==null&&age<4))type='isento';
-    else if(age!==null)type='crianca';
-    else if(section&&section.type)type=section.type;
-
-    result.push({
-      id:Date.now()+result.length+Math.floor(Math.random()*10000),
-      name:name.toUpperCase(),
-      type,
-      age,
-      birthday:!!birthday,
-      entered:false,
-      time:'',
-      outsideList:false,
-      observation
-    });
+    const guest=parseGuestCell(cells[0],pairedColumns?null:null,section);
+    if(guest)result.push(guest);
   }
   return result;
 }
@@ -417,6 +485,16 @@ function renderImportPreview(){
   $('importPreviewModal').setAttribute('aria-hidden','false');
 }
 function analyzeImport(text,replace){
+  // Aproveita o cabeçalho comum da planilha para preencher os aniversariantes,
+  // mas nunca o transforma em uma linha da lista.
+  const birthdayLine=removeInvisibleCharacters(text).split(/\r\n|\n|\r|\u2028|\u2029/).find(line=>{
+    const raw=normalize(line);
+    return (raw.match(/\b\d{1,2}\s*anos?\b/g)||[]).length>=2 && /[-–—]/.test(raw);
+  });
+  if(birthdayLine && !$('eventBirthday').value.trim()){
+    const names=birthdayLine.split(/[-–—]/).map(part=>part.replace(/\b\d{1,2}\s*anos?\b/gi,'').replace(/[.]/g,'').trim()).filter(Boolean);
+    if(names.length)$('eventBirthday').value=names.join(' e ').toUpperCase();
+  }
   const guests=parseSmartList(text);
   if(!guests.length){alert('Nenhum nome foi reconhecido.');return}
   pendingImport={guests,replace};

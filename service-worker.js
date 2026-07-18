@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lega-convidados-v17-estavel-20260718';
+const CACHE_NAME = 'lega-convidados-evento-20260718-v2';
 const APP_SHELL = [
   './',
   './index.html',
