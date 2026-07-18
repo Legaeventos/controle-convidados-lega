@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lega-convidados-evento-20260718-v2';
+const CACHE_NAME = 'lega-convidados-evento-20260718-v3-xlsx';
 const APP_SHELL = [
   './',
   './index.html',
