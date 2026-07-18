@@ -1,17 +1,16 @@
-CORREÇÃO URGENTE — EVENTO
+CORREÇÃO DA CLASSIFICAÇÃO DAS COLUNAS DO EXCEL
 
-1. Extraia este ZIP.
-2. No GitHub, envie TODOS os arquivos extraídos por cima dos atuais.
-3. Commit: "Corrige cache corrompido e leitura do Excel"
-4. Aguarde o GitHub Pages concluir.
-5. No computador:
-   - feche o aplicativo instalado;
-   - abra o endereço no navegador;
-   - pressione Ctrl+Shift+Delete e limpe apenas "imagens e arquivos em cache";
-   - depois pressione Ctrl+F5.
-6. Se o aplicativo instalado ainda mostrar códigos PNG/IHDR:
-   - desinstale SOMENTE o atalho/app Controle de Convidados;
-   - abra o endereço atualizado no Chrome/Edge;
-   - instale novamente.
+Esta versão lê a posição real das colunas da planilha:
+- bloco ADULTOS -> Adulto
+- bloco CRIANÇAS -> Criança
+- bloco CRIANÇAS MENORES DE 4 ANOS -> Isento
 
-A lista salva no Firebase não é apagada ao reinstalar o aplicativo.
+Para a planilha "2026 07 19 1 aninho Matheo - Lista convidados.xlsx",
+a prévia correta deve mostrar:
+- Total: 102
+- Adultos: 76
+- Crianças: 14
+- Isentos: 12
+
+Envie todos os arquivos deste pacote para a raiz do repositório,
+substituindo os atuais. Depois aguarde o GitHub Pages e recarregue.
