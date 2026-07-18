@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lega-convidados-evento-20260718-v4-sem-cache-corrompido';
+const CACHE_NAME = 'lega-convidados-evento-20260718-v5-colunas-excel';
 const APP_SHELL = [
   './',
   './index.html',
