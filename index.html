@@ -164,7 +164,7 @@ const auth=getAuth(firebaseApp);
 const db=getFirestore(firebaseApp);
 enableIndexedDbPersistence(db).catch(()=>{});
 
-const KEY='lega_eventos_salvos_v2';let savedEvents=[];let current=null;let filter='all';let dirty=false;let storageOK=true;let appMode='edit';let editorReturn='home';let currentUser=null;let unsubscribeEvents=null;let autoSaveTimer=null;let cloudReady=false;let lastLocatedGuestId=null;const $=id=>document.getElementById(id);const clone=o=>JSON.parse(JSON.stringify(o));
+const KEY='lega_eventos_salvos_v2';let savedEvents=[];let current=null;let filter='all';let dirty=false;let storageOK=true;let appMode='edit';let editorReturn='home';let currentUser=null;let unsubscribeEvents=null;let autoSaveTimer=null;let cloudReady=false;let lastLocatedGuestId=null;let cloudSaveToken=0;const $=id=>document.getElementById(id);const clone=o=>JSON.parse(JSON.stringify(o));
 function uuid(){return 'ev_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8)}
 function blankEvent(){return{id:uuid(),updatedAt:new Date().toISOString(),event:{name:'',date:'',birthday:'',owner:'',notes:''},guests:[]}}
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');if(id==='saved')renderSaved();window.scrollTo(0,0)}
@@ -213,7 +213,38 @@ function newEvent(){openEditor(blankEvent(),'edit','home')}
 function markDirty(){dirty=true;updateDirty();scheduleAutoSave()}
 function updateDirty(){$('dirty').textContent=dirty?'● Salvando…':'✓ Sincronizado';$('dirty').classList.toggle('dirty',dirty)}
 function updateSubtitle(){const n=$('eventName').value.trim();$('subtitle').textContent='Lega Eventos · '+(n||'novo evento')}
-async function saveToDevice(alertUser=true){clearTimeout(autoSaveTimer);const ev=eventState();const i=savedEvents.findIndex(x=>x.id===ev.id);if(i>=0)savedEvents[i]=ev;else savedEvents.unshift(ev);persistSaved();setCloudState(navigator.onLine?'Salvando…':'Offline · salvamento pendente',navigator.onLine?'saving':'offline');try{if(currentUser)await setDoc(doc(db,'eventos',ev.id),{...ev,ownerUid:currentUser.uid},{merge:true});dirty=false;updateDirty();setCloudState(navigator.onLine?'✓ Sincronizado':'Offline · salvo no aparelho',navigator.onLine?'':'offline');if(alertUser)alert('Evento salvo e sincronizado.')}catch(e){console.error(e);setCloudState('Offline · salvo no aparelho','offline');if(alertUser)alert('O evento foi salvo neste aparelho e será sincronizado quando a internet voltar.')}}
+function syncEventInBackground(ev,token,attempt=1){
+ if(!currentUser)return;
+ const cloudPromise=setDoc(doc(db,'eventos',ev.id),{...ev,ownerUid:currentUser.uid},{merge:true});
+ const timeoutPromise=new Promise((_,reject)=>setTimeout(()=>reject(new Error('Tempo limite de sincronização')),12000));
+ Promise.race([cloudPromise,timeoutPromise]).then(()=>{
+   if(token===cloudSaveToken)setCloudState('✓ Sincronizado','');
+ }).catch(err=>{
+   console.warn('Sincronização pendente:',err);
+   if(token===cloudSaveToken)setCloudState('Salvo no aparelho · sincronização pendente','offline');
+   if(attempt<3)setTimeout(()=>syncEventInBackground(ev,token,attempt+1),attempt*4000);
+ });
+}
+function saveToDevice(alertUser=true){
+ clearTimeout(autoSaveTimer);
+ const ev=eventState();
+ const i=savedEvents.findIndex(x=>x.id===ev.id);
+ if(i>=0)savedEvents[i]=ev;else savedEvents.unshift(ev);
+ const localSaved=persistSaved();
+ dirty=false;
+ updateDirty();
+ const token=++cloudSaveToken;
+ if(currentUser&&navigator.onLine){
+   setCloudState('Salvo no aparelho · sincronizando…','saving');
+   syncEventInBackground(ev,token);
+ }else{
+   setCloudState(localSaved?'✓ Salvo neste aparelho':'Não foi possível salvar neste aparelho',localSaved?'offline':'offline');
+ }
+ if(alertUser){
+   alert(localSaved?'Evento salvo. A sincronização com os outros dispositivos continuará em segundo plano.':'Não foi possível salvar o evento neste aparelho.');
+ }
+ return Promise.resolve(localSaved);
+}
 function filename(ev){let n=(ev.event.name||'evento').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_|_$/g,'').toLowerCase();return `${n||'evento'}_${ev.event.date||'sem_data'}.lega.json`}
 function download(name,data,type){const b=new Blob([data],{type}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),500)}
 async function shareEvent(ev){const data=JSON.stringify(ev,null,2);const file=new File([data],filename(ev),{type:'application/json'});try{if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({title:ev.event.name||'Evento Lega',text:'Arquivo do evento - Controle de Convidados Lega',files:[file]});return}download(filename(ev),data,'application/json;charset=utf-8');alert('O compartilhamento direto não está disponível neste dispositivo. O arquivo foi baixado para você compartilhar manualmente.')}catch(e){if(e&&e.name!=='AbortError')alert('Não foi possível compartilhar o evento. Tente usar Baixar arquivo.')}}
@@ -264,9 +295,9 @@ function detectSection(line){
   if(!h)return null;
   if(isListTitle(line))return {skip:true};
   if(/aniversariant/.test(h))return {type:'isento',birthday:true};
-  if(/^(bebes?|isentos?|criancas?\s+(de\s+)?0\s+a\s+4(\s+anos?)?|criancas?\s+menores?\s+de\s+4|menores?\s+de\s+4)/.test(h))return {type:'isento'};
+  if(/^(bebes?|isentos?|criancas?\s+(de\s+)?0\s+a\s+4(\s+anos?)?|criancas?\s+menores?\s+(?:de\s+)?4(?:\s+anos?)?|menores?\s+(?:de\s+)?4(?:\s+anos?)?)/.test(h))return {type:'isento'};
   if(/^(criancas?|infantil)/.test(h)){
-    if(/0\s+a\s+4|menor(es)?\s+de\s+4|isentas?/.test(h))return {type:'isento'};
+    if(/0\s+a\s+4|menor(es)?\s+(?:de\s+)?4|isentas?/.test(h))return {type:'isento'};
     return {type:'crianca'};
   }
   if(/^(adultos?|maes?|pais|responsaveis?)/.test(h))return {type:'adulto'};

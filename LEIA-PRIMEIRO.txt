@@ -1,31 +1,8 @@
-CONTROLE DE CONVIDADOS LEGA — VERSÃO ÚNICA PARA O EVENTO
+VERSÃO FINAL PARA O EVENTO
 
-Esta é a única versão que deve ser enviada ao GitHub agora.
+Correções incluídas:
+- salvamento local termina imediatamente; sincronização com Firebase segue em segundo plano
+- reconhece o cabeçalho CRIANÇAS MENORES 4 ANOS como ISENTOS
+- leitura de Excel preserva adultos, crianças e isentos pelas colunas
 
-CORREÇÕES INCLUÍDAS
-- Abre arquivos Excel .xlsx e .xls de verdade.
-- Reconhece a coluna esquerda como Adultos.
-- Reconhece a coluna direita como Crianças.
-- Após o cabeçalho “CRIANÇAS MENORES 4 ANOS”, classifica a direita como Isentos.
-- Ignora números, quadradinhos, título e horário.
-- Preserva nomes repetidos, como duas pessoas chamadas Cecília.
-- Remove o cache/service worker antigo que causava a tela PNG/IHDR.
-- Não contém arquivo JSON de evento nem Plataforma Lega.
-
-RESULTADO ESPERADO PARA A PLANILHA DO MATHEO
-Total: 102
-Adultos: 76
-Crianças: 14
-Isentos: 12
-
-PUBLICAÇÃO
-Envie TODOS os arquivos desta pasta para a RAIZ do repositório controle-convidados-lega,
-substituindo os arquivos com os mesmos nomes.
-
-Depois da publicação, abra primeiro no navegador usando o endereço do site com:
-?v=final1907
-
-Exemplo:
-https://legaeventos.github.io/controle-convidados-lega/?v=final1907
-
-Se abrir corretamente, importe a planilha e confira os totais antes de confirmar.
+Envie todos os arquivos desta pasta para a raiz do GitHub.
