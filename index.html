@@ -164,7 +164,7 @@ const auth=getAuth(firebaseApp);
 const db=getFirestore(firebaseApp);
 enableIndexedDbPersistence(db).catch(()=>{});
 
-const KEY='lega_eventos_salvos_v2';let savedEvents=[];let current=null;let filter='all';let dirty=false;let storageOK=true;let appMode='edit';let editorReturn='home';let currentUser=null;let unsubscribeEvents=null;let autoSaveTimer=null;let cloudReady=false;let lastLocatedGuestId=null;let cloudSaveToken=0;const $=id=>document.getElementById(id);const clone=o=>JSON.parse(JSON.stringify(o));
+const KEY='lega_eventos_salvos_v2';let savedEvents=[];let current=null;let filter='all';let dirty=false;let storageOK=true;let appMode='edit';let editorReturn='home';let currentUser=null;let unsubscribeEvents=null;let autoSaveTimer=null;let cloudReady=false;let lastLocatedGuestId=null;let cloudSaveToken=0;let initialAuthChecked=false;let explicitLoginAttempt=false;const $=id=>document.getElementById(id);const clone=o=>JSON.parse(JSON.stringify(o));
 function uuid(){return 'ev_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8)}
 function blankEvent(){return{id:uuid(),updatedAt:new Date().toISOString(),event:{name:'',date:'',birthday:'',owner:'',notes:''},guests:[]}}
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');if(id==='saved')renderSaved();window.scrollTo(0,0)}
@@ -463,7 +463,13 @@ function parseWorkbookRows(rows){
       sectionStarts.sort((a,b)=>a.index-b.index);
       for(let i=0;i<sectionStarts.length;i++){
         const start=sectionStarts[i].index;
-        const end=i+1<sectionStarts.length?sectionStarts[i+1].index:row.length;
+        // Cabeçalhos de planilhas costumam estar em células mescladas. Nesses
+        // casos, a linha do cabeçalho termina na coluna E, mas o nome fica na
+        // coluna F. Mantemos o bloco por pelo menos quatro colunas para que
+        // número, nome e checkbox recebam a mesma categoria.
+        const end=i+1<sectionStarts.length
+          ? sectionStarts[i+1].index
+          : Math.max(row.length,start+4);
         for(let c=start;c<end;c++)columnSections[c]=sectionStarts[i].section;
       }
     }
@@ -712,10 +718,46 @@ $('unidentifiedTools').onclick=e=>{
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
 window.addEventListener('online',()=>{setCloudState('Reconectando…','saving');if(currentUser)startCloudSync()});
 window.addEventListener('offline',()=>setCloudState('Sem internet','offline'));
-$('loginForm').onsubmit=async e=>{e.preventDefault();$('loginError').textContent='';$('loginButton').disabled=true;$('loginButton').textContent='Entrando…';try{await signInWithEmailAndPassword(auth,$('loginEmail').value.trim(),$('loginPassword').value)}catch(err){$('loginError').textContent='E-mail ou senha incorretos.'}finally{$('loginButton').disabled=false;$('loginButton').textContent='Entrar'}};
-$('logoutButton').onclick=()=>signOut(auth);
+$('loginForm').onsubmit=async e=>{
+  e.preventDefault();
+  $('loginError').textContent='';
+  if(!$('loginPassword').value){$('loginError').textContent='Digite a senha.';return}
+  explicitLoginAttempt=true;
+  $('loginButton').disabled=true;
+  $('loginButton').textContent='Entrando…';
+  try{
+    await signInWithEmailAndPassword(auth,$('loginEmail').value.trim(),$('loginPassword').value);
+  }catch(err){
+    explicitLoginAttempt=false;
+    $('loginError').textContent='E-mail ou senha incorretos.';
+  }finally{
+    $('loginButton').disabled=false;
+    $('loginButton').textContent='Entrar';
+  }
+};
+$('logoutButton').onclick=()=>{explicitLoginAttempt=false;signOut(auth)};
 loadSaved();
-onAuthStateChanged(auth,user=>{currentUser=user;if(user){$('loginOverlay').classList.add('hidden');$('cloudBar').hidden=false;startCloudSync()}else{if(unsubscribeEvents){unsubscribeEvents();unsubscribeEvents=null}$('loginOverlay').classList.remove('hidden');$('cloudBar').hidden=true;show('home')}});
+onAuthStateChanged(auth,async user=>{
+  // Não aceita uma sessão antiga restaurada automaticamente pelo navegador.
+  // A entrada só é liberada depois do envio explícito do formulário com senha.
+  if(!initialAuthChecked){
+    initialAuthChecked=true;
+    if(user&&!explicitLoginAttempt){await signOut(auth);return}
+  }
+  if(user&&!explicitLoginAttempt){await signOut(auth);return}
+  currentUser=user;
+  if(user){
+    $('loginOverlay').classList.add('hidden');
+    $('cloudBar').hidden=false;
+    startCloudSync();
+  }else{
+    if(unsubscribeEvents){unsubscribeEvents();unsubscribeEvents=null}
+    $('loginOverlay').classList.remove('hidden');
+    $('cloudBar').hidden=true;
+    $('loginPassword').value='';
+    show('home');
+  }
+});
 </script>
 <script>
 // Modo estável para o evento: remove versões antigas do cache e não registra
