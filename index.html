@@ -11,6 +11,12 @@
 
 .login-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(180deg,var(--lilasClaro),#f8faf7)}
 .login-overlay.hidden{display:none}.login-card{width:min(430px,100%);background:#fff;border:1px solid var(--borda);border-radius:26px;padding:28px;box-shadow:var(--sombra);text-align:center}.login-card img{width:min(300px,88%);height:auto;margin:0 auto 18px}.login-card h1{margin:0 0 6px;font-size:27px}.login-card p{margin:0 0 20px;color:var(--cinza)}.login-card .field{text-align:left;margin-bottom:12px}.login-card button{width:100%;min-height:50px}.login-error{min-height:22px;margin-top:12px;color:var(--vermelho);font-weight:700;font-size:14px}.cloud-bar{position:fixed;right:14px;bottom:14px;z-index:9000;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.96);border:1px solid var(--borda);border-radius:999px;padding:7px 9px 7px 12px;box-shadow:var(--sombra);font-size:12px}.cloud-state{font-weight:800;color:var(--verde2)}.cloud-state.saving{color:#80610f}.cloud-state.offline{color:var(--vermelho)}.logout-btn{padding:7px 10px;border-radius:999px;background:#f0f3f0;color:var(--texto);border:1px solid var(--borda);font-weight:750}.guest.search-match{cursor:pointer}.guest.search-match:hover{outline:2px solid var(--lilas)}.guest.located{animation:legaPulse 2.2s ease}@keyframes legaPulse{0%,100%{box-shadow:none}25%,70%{box-shadow:0 0 0 5px rgba(143,99,199,.28)}}
+.az-index{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;align-items:center}
+.az-index button{min-width:38px;min-height:38px;border-radius:10px;background:#f2f4f2;border:1px solid var(--borda);font-weight:800;font-size:15px;color:var(--texto)}
+.az-index button:active{background:var(--verde);color:#fff}
+.az-index .az-clear{background:#fff1f1;color:var(--vermelho);border-color:#efcccc;min-width:auto;padding:0 12px}
+.az-prefix{font-weight:850;font-size:15px;color:var(--verde2);background:var(--verdeClaro);border:1px solid #bfd5b2;border-radius:10px;padding:8px 12px;min-width:38px;text-align:center}
+.az-prefix.empty{display:none}
 </style>
 <style>
 body.reception-mode #eventDataPanel,
@@ -124,7 +130,7 @@ body.reception-mode #receptionActions{display:flex;align-items:center;justify-co
 </div>
 <div class="panel" id="eventDataPanel"><h2 class="section-title">Dados do evento</h2><div class="grid-event"><div class="field"><label>Nome do evento</label><input id="eventName" placeholder="Ex.: Aniversário de Helena"></div><div class="field"><label>Data</label><input id="eventDate" type="date"></div><div class="field"><label>Aniversariante(s)</label><input id="eventBirthday" placeholder="Nome(s)"></div><div class="field"><label>Responsável</label><input id="eventOwner" placeholder="Nome"></div></div><div class="field obs"><label>Observações</label><textarea id="eventNotes" placeholder="Informações importantes"></textarea></div><div class="toolbar"><button id="saveDevice" class="btn primary">Salvar em Eventos salvos</button><button id="exportEvent" class="btn secondary">Salvar arquivo do evento</button><button id="openEventEditor" class="btn secondary">Abrir arquivo de evento</button><input id="openEventFile" class="file-input" type="file" accept=".json,.lega,.lega.json,application/json"><button id="clearEvent" class="btn danger">Limpar evento</button></div><div id="editorNotice" class="notice">O armazenamento interno está bloqueado. Use “Salvar arquivo do evento” para não perder os dados.</div></div>
 <div class="panel"><div class="summary"><div class="summary-card"><div class="label">Total</div><div class="num" id="sumTotal">0</div></div><div class="summary-card present"><div class="label">Presentes</div><div class="num" id="sumPresent">0</div></div><div class="summary-card"><div class="label">Faltam</div><div class="num" id="sumMissing">0</div></div><div class="summary-card"><div class="label">Adultos</div><div class="num" id="sumAdults">0</div></div><div class="summary-card"><div class="label">Crianças</div><div class="num" id="sumChildren">0</div></div><div class="summary-card"><div class="label">Isentos</div><div class="num" id="sumFree">0</div></div><div class="summary-card extra-card"><div class="label">Fora da lista</div><div class="num" id="sumExtra">0</div></div></div></div>
-<div class="panel"><div class="controls"><input id="search" class="search" type="search" placeholder="Digite o nome do convidado..."><div class="toolbar" style="margin:0"><button id="csv" class="btn secondary">Exportar CSV</button><button class="btn secondary" onclick="window.print()">Imprimir</button></div></div><div class="filters" id="filters"><button class="filter active" data-f="all">Todos</button><button class="filter" data-f="waiting">Aguardando</button><button class="filter" data-f="present">Presentes</button><button class="filter" data-f="adulto">Adultos</button><button class="filter" data-f="crianca">Crianças</button><button class="filter" data-f="isento">Isentos</button><button class="filter" data-f="aniv">Aniversariantes</button></div><div class="list-actions"><button id="toggleAdd" class="btn primary">＋ Adicionar convidado</button><button id="toggleImport" class="btn secondary">Importar lista ou planilha</button></div><div id="addPanel" class="hidden-panel"><form id="addForm" class="form-grid"><div class="field"><label>Nome</label><input id="guestName" required placeholder="Nome do convidado"></div><div class="field"><label>Categoria</label><select id="guestType"><option value="adulto">Adulto</option><option value="crianca">Criança pagante</option><option value="isento">Isento</option><option value="aniv">Aniversariante isento</option></select></div><div class="field"><label>Idade</label><input id="guestAge" type="number" min="0" max="99" inputmode="numeric" placeholder="Opcional"></div><button class="btn secondary" type="submit">Adicionar</button></form></div><div id="importPanel" class="hidden-panel"><div class="import-grid"><div><div class="field"><label>Arquivo Excel, CSV ou TXT</label><input id="listFile" type="file" accept=".xlsx,.xls,.csv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,text/plain"></div><p class="help">Escolha diretamente uma planilha Excel (.xlsx/.xls), CSV ou TXT. Também é possível copiar e colar as células no campo ao lado.</p><button id="readList" class="btn secondary">Ler arquivo ou planilha</button></div><div class="field"><label>Lista copiada do WhatsApp, Excel ou Numbers</label><textarea id="importText" placeholder="Cole aqui um nome por linha. Ex.: Miguel - 5 anos"></textarea><p class="help">Menores de 4 anos são classificados como isentos. “ISENTO” e “ANIVERSARIANTE” também são reconhecidos.</p></div></div><label class="checkline"><input id="replaceList" type="checkbox" checked> Substituir a lista atual</label><div class="toolbar"><button id="importContent" class="btn primary">Importar conteúdo</button><button id="closeImport" class="btn secondary">Fechar</button></div></div></div>
+<div class="panel"><div class="controls"><input id="search" class="search" type="search" placeholder="Digite o nome do convidado..."><div class="toolbar" style="margin:0"><button id="csv" class="btn secondary">Exportar CSV</button><button class="btn secondary" onclick="window.print()">Imprimir</button></div></div><div class="az-index" id="azIndex"><span class="az-prefix empty" id="azPrefix"></span><button class="az-clear" id="azClear" type="button" title="Limpar índice">×</button></div><div class="filters" id="filters"><button class="filter active" data-f="all">Todos</button><button class="filter" data-f="waiting">Aguardando</button><button class="filter" data-f="present">Presentes</button><button class="filter" data-f="adulto">Adultos</button><button class="filter" data-f="crianca">Crianças</button><button class="filter" data-f="isento">Isentos</button><button class="filter" data-f="aniv">Aniversariantes</button></div><div class="list-actions"><button id="toggleAdd" class="btn primary">＋ Adicionar convidado</button><button id="toggleImport" class="btn secondary">Importar lista ou planilha</button></div><div id="addPanel" class="hidden-panel"><form id="addForm" class="form-grid"><div class="field"><label>Nome</label><input id="guestName" required placeholder="Nome do convidado"></div><div class="field"><label>Categoria</label><select id="guestType"><option value="adulto">Adulto</option><option value="crianca">Criança pagante</option><option value="isento">Isento</option><option value="aniv">Aniversariante isento</option></select></div><div class="field"><label>Idade</label><input id="guestAge" type="number" min="0" max="99" inputmode="numeric" placeholder="Opcional"></div><button class="btn secondary" type="submit">Adicionar</button></form></div><div id="importPanel" class="hidden-panel"><div class="import-grid"><div><div class="field"><label>Arquivo Excel, CSV ou TXT</label><input id="listFile" type="file" accept=".xlsx,.xls,.csv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,text/plain"></div><p class="help">Escolha diretamente uma planilha Excel (.xlsx/.xls), CSV ou TXT. Também é possível copiar e colar as células no campo ao lado.</p><button id="readList" class="btn secondary">Ler arquivo ou planilha</button></div><div class="field"><label>Lista copiada do WhatsApp, Excel ou Numbers</label><textarea id="importText" placeholder="Cole aqui um nome por linha. Ex.: Miguel - 5 anos"></textarea><p class="help">Menores de 4 anos são classificados como isentos. “ISENTO” e “ANIVERSARIANTE” também são reconhecidos.</p></div></div><label class="checkline"><input id="replaceList" type="checkbox" checked> Substituir a lista atual</label><div class="toolbar"><button id="importContent" class="btn primary">Importar conteúdo</button><button id="closeImport" class="btn secondary">Fechar</button></div></div></div>
 <div id="guestList" class="guest-list"></div><div class="footer-line"><span id="shown">0 convidados exibidos</span><button id="resetEntries" class="btn danger">Zerar somente as entradas</button></div></section>
 </main><div id="importPreviewModal" class="preview-modal" aria-hidden="true">
   <div class="preview-box">
@@ -164,7 +170,12 @@ const auth=getAuth(firebaseApp);
 const db=getFirestore(firebaseApp);
 enableIndexedDbPersistence(db).catch(()=>{});
 
-const KEY='lega_eventos_salvos_v2';let savedEvents=[];let current=null;let filter='all';let dirty=false;let storageOK=true;let appMode='edit';let editorReturn='home';let currentUser=null;let unsubscribeEvents=null;let autoSaveTimer=null;let cloudReady=false;let lastLocatedGuestId=null;let cloudSaveToken=0;let initialAuthChecked=false;let explicitLoginAttempt=false;const $=id=>document.getElementById(id);const clone=o=>JSON.parse(JSON.stringify(o));
+const KEY='lega_eventos_salvos_v2';let savedEvents=[];let current=null;let filter='all';let dirty=false;let storageOK=true;let appMode='edit';let editorReturn='home';let currentUser=null;let unsubscribeEvents=null;let autoSaveTimer=null;let cloudReady=false;let lastLocatedGuestId=null;let cloudSaveToken=0;let azPrefix='';const $=id=>document.getElementById(id);const clone=o=>JSON.parse(JSON.stringify(o));
+const AZ_LETTERS='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+function buildAzIndex(){const box=$('azIndex');const clearBtn=$('azClear');AZ_LETTERS.forEach(l=>{const b=document.createElement('button');b.type='button';b.textContent=l;b.dataset.letter=l;box.insertBefore(b,clearBtn)})}
+function updateAzPrefixDisplay(){const el=$('azPrefix');el.textContent=azPrefix;el.classList.toggle('empty',!azPrefix)}
+function setAzPrefix(p){azPrefix=p;updateAzPrefixDisplay();if(azPrefix)$('search').value='';renderGuests()}
+function indexMatches(g){if(!azPrefix)return true;return normalize(g.name).startsWith(normalize(azPrefix))}
 function uuid(){return 'ev_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8)}
 function blankEvent(){return{id:uuid(),updatedAt:new Date().toISOString(),event:{name:'',date:'',birthday:'',owner:'',notes:''},guests:[]}}
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');if(id==='saved')renderSaved();window.scrollTo(0,0)}
@@ -260,8 +271,8 @@ function guestMatches(g,term){if(!term)return true;const q=normalize(term);const
 function typeText(g){if(g.birthday)return'Aniversariante';if(g.type==='adulto')return'Adulto';if(g.type==='crianca')return'Criança pagante';return'Isento'}
 function ageText(a){if(a===null||a===''||Number.isNaN(Number(a)))return'';return Number(a)===1?'1 ano':`${Number(a)} anos`}
 function passFilter(g){if(filter==='all')return true;if(filter==='waiting')return!g.entered;if(filter==='present')return g.entered;if(filter==='aniv')return g.birthday;return g.type===filter}
-function renderGuests(){if(!current)return;const rawTerm=$('search').value.trim();const list=orderGuestsForDisplay(current.guests.filter(g=>passFilter(g)&&guestMatches(g,rawTerm)));const box=$('guestList');box.innerHTML='';if(!list.length)box.innerHTML='<div class="empty">Nenhum convidado encontrado.</div>';else list.forEach(g=>{const el=document.createElement('article');el.id=`guest-${g.id}`;el.dataset.locate=rawTerm?g.id:'';el.className='guest '+(g.entered?'entered ':'')+(rawTerm?'search-match ':'')+(lastLocatedGuestId==g.id?'located':'');el.innerHTML=`<div><div class="guest-name">${g.birthday?'🎂 ':''}${escapeHtml(g.name)}</div><div class="badges"><span class="badge ${g.birthday?'aniv':g.type==='isento'?'isento':''}">${typeText(g)}</span>${g.age!==null&&g.age!==''?`<span class="badge">${ageText(g.age)}</span>`:''}${g.entered&&g.time?`<span class="badge">Entrada: ${escapeHtml(g.time)}</span>`:''}${g.observation?`<span class="badge">${escapeHtml(g.observation)}</span>`:''}</div></div><div class="guest-buttons"><button class="entry" data-entry="${g.id}">${g.entered?'✓ Entrou · desfazer':'Marcar entrada'}</button><button class="delete" title="Excluir convidado" data-del="${g.id}">×</button></div>`;box.appendChild(el)});updateSummary();$('shown').textContent=`${list.length} convidado${list.length===1?'':'s'} exibido${list.length===1?'':'s'}`}
-function locateGuest(id){lastLocatedGuestId=id;$('search').value='';filter='all';document.querySelectorAll('.filter').forEach(x=>x.classList.toggle('active',x.dataset.f==='all'));renderGuests();requestAnimationFrame(()=>{const el=$(`guest-${id}`);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>{lastLocatedGuestId=null;if(el)el.classList.remove('located')},2400)})}
+function renderGuests(){if(!current)return;const rawTerm=$('search').value.trim();const active=azPrefix||rawTerm;const list=orderGuestsForDisplay(current.guests.filter(g=>passFilter(g)&&(azPrefix?indexMatches(g):guestMatches(g,rawTerm))));const box=$('guestList');box.innerHTML='';if(!list.length)box.innerHTML='<div class="empty">Nenhum convidado encontrado.</div>';else list.forEach(g=>{const el=document.createElement('article');el.id=`guest-${g.id}`;el.dataset.locate=active?g.id:'';el.className='guest '+(g.entered?'entered ':'')+(active?'search-match ':'')+(lastLocatedGuestId==g.id?'located':'');el.innerHTML=`<div><div class="guest-name">${g.birthday?'🎂 ':''}${escapeHtml(g.name)}</div><div class="badges"><span class="badge ${g.birthday?'aniv':g.type==='isento'?'isento':''}">${typeText(g)}</span>${g.age!==null&&g.age!==''?`<span class="badge">${ageText(g.age)}</span>`:''}${g.entered&&g.time?`<span class="badge">Entrada: ${escapeHtml(g.time)}</span>`:''}${g.observation?`<span class="badge">${escapeHtml(g.observation)}</span>`:''}</div></div><div class="guest-buttons"><button class="entry" data-entry="${g.id}">${g.entered?'✓ Entrou · desfazer':'Marcar entrada'}</button><button class="delete" title="Excluir convidado" data-del="${g.id}">×</button></div>`;box.appendChild(el)});updateSummary();$('shown').textContent=`${list.length} convidado${list.length===1?'':'s'} exibido${list.length===1?'':'s'}`}
+function locateGuest(id){lastLocatedGuestId=id;$('search').value='';azPrefix='';updateAzPrefixDisplay();filter='all';document.querySelectorAll('.filter').forEach(x=>x.classList.toggle('active',x.dataset.f==='all'));renderGuests();requestAnimationFrame(()=>{const el=$(`guest-${id}`);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>{lastLocatedGuestId=null;if(el)el.classList.remove('located')},2400)})}
 function updateSummary(){const gs=current.guests,p=gs.filter(g=>g.entered).length;$('sumTotal').textContent=gs.length;$('sumPresent').textContent=p;$('sumMissing').textContent=gs.length-p;$('sumAdults').textContent=gs.filter(g=>g.type==='adulto').length;$('sumChildren').textContent=gs.filter(g=>g.type==='crianca').length;$('sumFree').textContent=gs.filter(g=>g.type==='isento').length;$('sumExtra').textContent=gs.filter(g=>g.outsideList).length}
 
 let pendingImport=null;
@@ -463,13 +474,7 @@ function parseWorkbookRows(rows){
       sectionStarts.sort((a,b)=>a.index-b.index);
       for(let i=0;i<sectionStarts.length;i++){
         const start=sectionStarts[i].index;
-        // Cabeçalhos de planilhas costumam estar em células mescladas. Nesses
-        // casos, a linha do cabeçalho termina na coluna E, mas o nome fica na
-        // coluna F. Mantemos o bloco por pelo menos quatro colunas para que
-        // número, nome e checkbox recebam a mesma categoria.
-        const end=i+1<sectionStarts.length
-          ? sectionStarts[i+1].index
-          : Math.max(row.length,start+4);
+        const end=i+1<sectionStarts.length?sectionStarts[i+1].index:row.length;
         for(let c=start;c<end;c++)columnSections[c]=sectionStarts[i].section;
       }
     }
@@ -618,7 +623,9 @@ $('shareReception').onclick=()=>{
 };$('exportEvent').onclick=exportCurrent;$('clearEvent').onclick=()=>{if(confirm('Limpar todos os dados deste evento?'))newEvent()};
 $('importEventBtn').onclick=()=>$('importEventFile').click();$('importEventFile').onchange=e=>{if(e.target.files[0])importFile(e.target.files[0],true);e.target.value=''};$('openEventEditor').onclick=()=>$('openEventFile').click();$('openEventFile').onchange=e=>{if(e.target.files[0])importFile(e.target.files[0],false);e.target.value=''};
 $('savedList').onclick=async e=>{const id=e.target.dataset.open||e.target.dataset.edit||e.target.dataset.share||e.target.dataset.export||e.target.dataset.delete;if(!id)return;const ev=savedEvents.find(x=>x.id===id);if(!ev)return;if(e.target.dataset.open)openReception(ev);else if(e.target.dataset.edit)openEdit(ev);else if(e.target.dataset.share)shareEvent(ev);else if(e.target.dataset.export)download(filename(ev),JSON.stringify(ev,null,2),'application/json;charset=utf-8');else if(e.target.dataset.delete&&confirm(`Excluir o evento “${ev.event.name||'sem nome'}” de todos os dispositivos?`)){savedEvents=savedEvents.filter(x=>x.id!==id);persistSaved();renderSaved();try{if(currentUser)await deleteDoc(doc(db,'eventos',id))}catch(err){alert('O evento saiu deste aparelho, mas não foi possível confirmar a exclusão na nuvem.')}}};
-$('search').oninput=renderGuests;$('filters').onclick=e=>{const b=e.target.closest('.filter');if(!b)return;filter=b.dataset.f;document.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderGuests()};$('guestList').onclick=e=>{const ei=e.target.dataset.entry,di=e.target.dataset.del;if(!ei&&!di){const card=e.target.closest('[data-locate]');if(card&&card.dataset.locate){locateGuest(card.dataset.locate);return}}if(ei){const g=current.guests.find(x=>x.id==ei);g.entered=!g.entered;g.time=g.entered?new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';markDirty();renderGuests();saveToDevice(false)}if(di){const g=current.guests.find(x=>x.id==di);if(g&&confirm(`Excluir ${g.name} da lista?`)){current.guests=current.guests.filter(x=>x.id!=di);markDirty();renderGuests()}}};
+$('search').oninput=()=>{if(azPrefix){azPrefix='';updateAzPrefixDisplay()}renderGuests()};
+$('azIndex').onclick=e=>{const b=e.target.closest('button[data-letter]');if(b){setAzPrefix(azPrefix+b.dataset.letter);return}if(e.target===$('azClear'))setAzPrefix('')};
+$('filters').onclick=e=>{const b=e.target.closest('.filter');if(!b)return;filter=b.dataset.f;document.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderGuests()};$('guestList').onclick=e=>{const ei=e.target.dataset.entry,di=e.target.dataset.del;if(!ei&&!di){const card=e.target.closest('[data-locate]');if(card&&card.dataset.locate){locateGuest(card.dataset.locate);return}}if(ei){const g=current.guests.find(x=>x.id==ei);g.entered=!g.entered;g.time=g.entered?new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';markDirty();renderGuests();saveToDevice(false)}if(di){const g=current.guests.find(x=>x.id==di);if(g&&confirm(`Excluir ${g.name} da lista?`)){current.guests=current.guests.filter(x=>x.id!=di);markDirty();renderGuests()}}};
 $('toggleAdd').onclick=()=>$('addPanel').classList.toggle('open');$('toggleImport').onclick=()=>$('importPanel').classList.toggle('open');$('closeImport').onclick=()=>$('importPanel').classList.remove('open');$('addForm').onsubmit=e=>{e.preventDefault();const name=$('guestName').value.trim();if(!name)return;const sel=$('guestType').value,age=$('guestAge').value===''?null:Number($('guestAge').value);const birthday=sel==='aniv',type=birthday?'isento':sel;if(current.guests.some(g=>normalize(g.name)===normalize(name))&&!confirm('Já existe um convidado com esse nome. Adicionar mesmo assim?'))return;current.guests.push({id:Date.now(),name:name.toUpperCase(),type,age,birthday,entered:false,time:'',outsideList:appMode==='reception'});$('guestName').value='';$('guestAge').value='';markDirty();renderGuests()};
 $('readList').onclick=async()=>{
   const f=$('listFile').files[0];
@@ -718,46 +725,11 @@ $('unidentifiedTools').onclick=e=>{
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
 window.addEventListener('online',()=>{setCloudState('Reconectando…','saving');if(currentUser)startCloudSync()});
 window.addEventListener('offline',()=>setCloudState('Sem internet','offline'));
-$('loginForm').onsubmit=async e=>{
-  e.preventDefault();
-  $('loginError').textContent='';
-  if(!$('loginPassword').value){$('loginError').textContent='Digite a senha.';return}
-  explicitLoginAttempt=true;
-  $('loginButton').disabled=true;
-  $('loginButton').textContent='Entrando…';
-  try{
-    await signInWithEmailAndPassword(auth,$('loginEmail').value.trim(),$('loginPassword').value);
-  }catch(err){
-    explicitLoginAttempt=false;
-    $('loginError').textContent='E-mail ou senha incorretos.';
-  }finally{
-    $('loginButton').disabled=false;
-    $('loginButton').textContent='Entrar';
-  }
-};
-$('logoutButton').onclick=()=>{explicitLoginAttempt=false;signOut(auth)};
+$('loginForm').onsubmit=async e=>{e.preventDefault();$('loginError').textContent='';$('loginButton').disabled=true;$('loginButton').textContent='Entrando…';try{await signInWithEmailAndPassword(auth,$('loginEmail').value.trim(),$('loginPassword').value)}catch(err){$('loginError').textContent='E-mail ou senha incorretos.'}finally{$('loginButton').disabled=false;$('loginButton').textContent='Entrar'}};
+$('logoutButton').onclick=()=>signOut(auth);
 loadSaved();
-onAuthStateChanged(auth,async user=>{
-  // Não aceita uma sessão antiga restaurada automaticamente pelo navegador.
-  // A entrada só é liberada depois do envio explícito do formulário com senha.
-  if(!initialAuthChecked){
-    initialAuthChecked=true;
-    if(user&&!explicitLoginAttempt){await signOut(auth);return}
-  }
-  if(user&&!explicitLoginAttempt){await signOut(auth);return}
-  currentUser=user;
-  if(user){
-    $('loginOverlay').classList.add('hidden');
-    $('cloudBar').hidden=false;
-    startCloudSync();
-  }else{
-    if(unsubscribeEvents){unsubscribeEvents();unsubscribeEvents=null}
-    $('loginOverlay').classList.remove('hidden');
-    $('cloudBar').hidden=true;
-    $('loginPassword').value='';
-    show('home');
-  }
-});
+buildAzIndex();
+onAuthStateChanged(auth,user=>{currentUser=user;if(user){$('loginOverlay').classList.add('hidden');$('cloudBar').hidden=false;startCloudSync()}else{if(unsubscribeEvents){unsubscribeEvents();unsubscribeEvents=null}$('loginOverlay').classList.remove('hidden');$('cloudBar').hidden=true;show('home')}});
 </script>
 <script>
 // Modo estável para o evento: remove versões antigas do cache e não registra

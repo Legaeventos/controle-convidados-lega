@@ -1,8 +1,16 @@
-VERSÃO FINAL PARA O EVENTO
+CONTROLE DE CONVIDADOS LEGA — VERSÃO COM ÍNDICE A-Z INTELIGENTE
 
-Correções incluídas:
-- salvamento local termina imediatamente; sincronização com Firebase segue em segundo plano
-- reconhece o cabeçalho CRIANÇAS MENORES 4 ANOS como ISENTOS
-- leitura de Excel preserva adultos, crianças e isentos pelas colunas
+Novidade desta versão:
+- Na tela de recepção (portaria), abaixo do campo de busca, agora existe
+  um índice A-Z. Toque na primeira letra do nome que procura para filtrar
+  a lista; toque em mais letras para refinar ainda mais (ex.: M, depois A
+  filtra só quem começa com "MA"). Use o × para limpar o filtro.
+- Ao tocar no convidado encontrado, o índice é limpo automaticamente e
+  ele é localizado na lista completa, exatamente como já acontecia com
+  a busca por texto.
+- A ordem da lista (famílias agrupadas) continua exatamente igual, não
+  foi alterada.
 
-Envie todos os arquivos desta pasta para a raiz do GitHub.
+Para publicar: envie todos os arquivos desta pasta para a raiz do
+repositório no GitHub, substituindo os atuais. Aguarde o GitHub Pages
+atualizar e recarregue o app (no iPad, feche e abra novamente).
