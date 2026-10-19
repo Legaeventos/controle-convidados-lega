@@ -1,3 +1,17 @@
+# v1.1.8 — Sincronização entre aparelhos e atualização automática
+
+**Correção grave de sincronização**
+- Antes, cada aparelho enviava todos os seus dados e sobrescrevia a nuvem: quem salvava por último apagava o que o outro tinha criado (ex.: orçamentos sumindo).
+- Agora cada envio baixa a versão da nuvem e mescla item a item (eventos, orçamentos, contratos, lançamentos, clientes, estoque). Exclusões também são respeitadas.
+- Gravação condicional: se dois aparelhos salvam ao mesmo tempo, o segundo mescla de novo antes de gravar.
+- Busca automática de novidades a cada 20 segundos e ao voltar para a janela. A tela se atualiza sozinha; se você estiver preenchendo um formulário, o botão de sincronização mostra ↻ para atualizar quando quiser.
+- Primeira sincronização da v1.1.8 soma os dados do aparelho com os da nuvem (nada é apagado) e guarda uma cópia de segurança local.
+- Respostas do Supabase não são mais guardadas no cache offline.
+
+**Atualização da plataforma**
+- Novo arquivo version.json: quando uma nova versão é publicada, a plataforma percebe em até 5 minutos e se atualiza (ou mostra o aviso "Atualizar agora" se houver formulário em edição).
+- Cache offline passa a conferir sempre a versão mais nova no servidor.
+
 # v1.1.7 — Contrato revisado, parcelas com data e assinatura gov.br
 
 **Condições de pagamento (contrato)**
